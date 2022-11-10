@@ -31,7 +31,7 @@ double mat_cal(const _Queue<double>& A, const _Queue<double>& B) {
 	{
 		if (A.size() != B.size())
 		{
-			throw std::runtime_error("矩阵计算大小出错");
+			throw std::runtime_error("size error");
 		}
 		double data = 0;
 		for (int i = 0; i < A.size(); i++)
