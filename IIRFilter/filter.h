@@ -1,4 +1,4 @@
-#ifndef FILTER_H
+ï»¿#ifndef FILTER_H
 #define FILTER_H
 
 #include <vector>
@@ -207,7 +207,7 @@ template<typename value_type>
 inline double Filter<value_type>::DoFilter(value_type data)
 {
 	m_data.A.add_data(data);
-	// ²î·Ö·½³Ì
+	// å·®åˆ†æ–¹ç¨‹
 	double filter_data = mat_cal(m_filter.B, m_data.A) - mat_cal(m_filter.A, m_data.B);
 	m_data.B.add_data(filter_data);
 
