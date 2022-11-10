@@ -217,14 +217,14 @@ inline double Filter<value_type>::DoFilter(value_type data)
 template<typename value_type>
 inline std::vector<double> Filter<value_type>::DoFilter(const value_type* data, int size)
 {
-	std::vector<double> ret_data(data, data + size);
+	std::vector<float> ret_data(data, data + size);
 	return DoFilter(ret_data);
 }
 
 template<typename value_type>
 inline std::vector<double> Filter<value_type>::DoFilter(std::vector<value_type> data)
 {
-	std::vector<double> ret_data = data;
+	std::vector<double> ret_data(data.begin(), data.end());
 
 	for (int i = 0; i < data.size(); i++) {
 		ret_data[i] = 0;

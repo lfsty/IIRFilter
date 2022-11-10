@@ -9,7 +9,7 @@ public:
 	FilterBank();
 public:
 	//添加滤波器
-	void AddFilter(Filter<value_type> filter);
+	void AddFilter(Filter<double> filter);
 	void AddFilter(int Order, const double* B, const double* A);
 	void AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A);
 	//滤波
@@ -22,7 +22,7 @@ public:
 	//清空滤波器组
 	void clear();
 private:
-	std::vector<Filter<value_type>> m_filter_bank;
+	std::vector<Filter<double>> m_filter_bank;
 };
 
 
@@ -32,7 +32,7 @@ inline FilterBank<value_type>::FilterBank()
 }
 
 template<typename value_type>
-inline void FilterBank<value_type>::AddFilter(Filter<value_type> filter)
+inline void FilterBank<value_type>::AddFilter(Filter<double> filter)
 {
 	m_filter_bank.push_back(filter);
 }
@@ -40,14 +40,14 @@ inline void FilterBank<value_type>::AddFilter(Filter<value_type> filter)
 template<typename value_type>
 inline void FilterBank<value_type>::AddFilter(int Order, const double* B, const double* A)
 {
-	Filter<value_type> tmp_filter(Order, B, A);
+	Filter<double> tmp_filter(Order, B, A);
 	AddFilter(tmp_filter);
 }
 
 template<typename value_type>
 inline void FilterBank<value_type>::AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A)
 {
-	Filter<value_type> tmp_filter(Order, B, A);
+	Filter<double> tmp_filter(Order, B, A);
 	AddFilter(tmp_filter);
 }
 
@@ -65,7 +65,7 @@ inline double FilterBank<value_type>::DoFilter(const value_type& data)
 template<typename value_type>
 inline std::vector<double> FilterBank<value_type>::DoFilter(const std::vector<value_type>& data)
 {
-	std::vector<double> ret_data = data;
+	std::vector<double> ret_data(data.begin(), data.end());
 	for (auto iter = m_filter_bank.begin(); iter != m_filter_bank.end(); iter++)
 	{
 		ret_data = iter->DoFilter(ret_data);

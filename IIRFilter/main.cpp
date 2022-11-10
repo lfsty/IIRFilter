@@ -13,7 +13,7 @@ const double DEN[3] =
 	1,   -1.999111423471,   0.9991118180796
 };
 
-typedef double sorce_data_type;
+typedef float sorce_data_type;
 #define DATA_LENGTH 1000000
 int main() {
 	vector<sorce_data_type> data(DATA_LENGTH, 1);
