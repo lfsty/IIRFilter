@@ -10,11 +10,12 @@ class _Queue {
 public:
 	_Queue<T>();
 	_Queue<T>(int length);
-	_Queue<T>(const _Queue& copy);
+	_Queue<T>(const _Queue<T>& copy);
 	~_Queue();
 public:
 	T operator[](int i);
 	T operator[](int i) const;
+	void operator = (const _Queue<T>& copy);
 	void add_data(T data);
 	void init(std::vector<T> data);
 	void init(const double* data);
@@ -27,7 +28,7 @@ private:
 	int m_front = 0;
 	int m_length = 0;
 };
-double mat_cal(const _Queue<double>& A, const _Queue<double>& B) {
+static double mat_cal(const _Queue<double>& A, const _Queue<double>& B) {
 	{
 		if (A.size() != B.size())
 		{
@@ -46,8 +47,8 @@ template<typename value_type>
 class Filter
 {
 public:
-	Filter(int Order, const std::vector<double>& B, const std::vector<double>& A);
-	Filter(int Order, const double* B, const double* A);
+	Filter(int Order, const std::vector<double>& NUM, const std::vector<double>& DEN, bool enabled = false);
+	Filter(int Order, const double* NUM, const double* DEN, bool enabled = false);
 private:
 	struct _parameter
 	{
@@ -58,10 +59,21 @@ private:
 	_parameter m_filter;
 	_parameter m_data;
 	int m_order = 0;
+	bool m_enable = false;
+public:
+	void operator = (const Filter<value_type>& _filter);
 public:
 	double DoFilter(value_type data);
 	std::vector<double> DoFilter(const value_type* data, int size);
 	std::vector<double> DoFilter(std::vector<value_type> data);
+	bool isEnable()
+	{
+		return m_enable;
+	}
+	void SetEnabled(bool enable)
+	{
+		m_enable = enable;
+	}
 };
 
 
@@ -80,7 +92,7 @@ inline _Queue<T>::_Queue(int length)
 }
 
 template<typename T>
-inline _Queue<T>::_Queue(const _Queue& copy)
+inline _Queue<T>::_Queue(const _Queue<T>& copy)
 {
 	m_length = copy.m_length;
 	m_front = 0;
@@ -127,6 +139,22 @@ inline T _Queue<T>::operator[](int i) const
 	}
 }
 
+template<typename T>
+inline void _Queue<T>::operator=(const _Queue<T>& copy)
+{
+	m_length = copy.m_length;
+	m_front = 0;
+	if (m_data != nullptr) {
+		delete[] m_data;
+		m_data = nullptr;
+	}
+
+	m_data = new T[m_length];
+	memcpy(m_data, copy.m_data, m_length * sizeof(T));
+	m_front = copy.m_front;
+	m_front = copy.m_front;
+}
+
 
 template<typename T>
 inline void _Queue<T>::add_data(T data)
@@ -170,7 +198,9 @@ template<typename T>
 inline void _Queue<T>::SetQueueSize(int size)
 {
 	if (m_data != nullptr) {
-		throw std::runtime_error("queue size already set");
+		//throw std::runtime_error("queue size already set");
+		delete[] m_data;
+		m_data = nullptr;
 	}
 	m_length = size;
 	m_front = 0;
@@ -180,62 +210,86 @@ inline void _Queue<T>::SetQueueSize(int size)
 }
 
 template<typename value_type>
-inline Filter<value_type>::Filter(int Order, const std::vector<double>& B, const std::vector<double>& A)
+inline Filter<value_type>::Filter(int Order, const std::vector<double>& NUM, const std::vector<double>& DEN, bool enabled)
+	:m_enable(enabled)
 {
 	m_filter.A.SetQueueSize(Order);
-	m_filter.A.init(std::vector<double>(A.begin() + 1, A.end()));
+	m_filter.A.init(std::vector<double>(DEN.begin() + 1, DEN.end()));
 	m_filter.B.SetQueueSize(Order + 1);
-	m_filter.B.init(B);
+	m_filter.B.init(NUM);
 	m_data.A.SetQueueSize(Order + 1);
 	m_data.B.SetQueueSize(Order);
 	m_order = Order;
 }
 
 template<typename value_type>
-inline Filter<value_type>::Filter(int Order, const double* B, const double* A)
+inline Filter<value_type>::Filter(int Order, const double* NUM, const double* DEN, bool enabled)
+	:m_enable(enabled)
 {
 	m_filter.A.SetQueueSize(Order);
-	m_filter.A.init(A + 1);
+	m_filter.A.init(DEN + 1);
 	m_filter.B.SetQueueSize(Order + 1);
-	m_filter.B.init(B);
+	m_filter.B.init(NUM);
 	m_data.A.SetQueueSize(Order + 1);
 	m_data.B.SetQueueSize(Order);
 	m_order = Order;
+}
+
+template<typename value_type>
+inline void Filter<value_type>::operator=(const Filter<value_type>& _filter)
+{
+	m_filter.A = _filter.m_filter.A;
+	m_filter.B = _filter.m_filter.B;
+	m_data.A = _filter.m_data.A;
+	m_data.B = _filter.m_data.B;
+	m_order = _filter.m_order;
+	SetEnabled(_filter.m_enable);
 }
 
 template<typename value_type>
 inline double Filter<value_type>::DoFilter(value_type data)
 {
-	m_data.A.add_data(data);
-	// 差分方程
-	double filter_data = mat_cal(m_filter.B, m_data.A) - mat_cal(m_filter.A, m_data.B);
-	m_data.B.add_data(filter_data);
+	if (m_enable) {
+		m_data.A.add_data(data);
+		// 差分方程
+		double filter_data = mat_cal(m_filter.B, m_data.A) - mat_cal(m_filter.A, m_data.B);
+		m_data.B.add_data(filter_data);
 
-	return filter_data;
+		return filter_data;
+	}
+	else {
+		return data;
+	}
 }
 
 template<typename value_type>
 inline std::vector<double> Filter<value_type>::DoFilter(const value_type* data, int size)
 {
 	std::vector<value_type> ret_data(data, data + size);
-	return DoFilter(ret_data);
+	if (m_enable) {
+		return DoFilter(ret_data);
+	}
+	else {
+		return ret_data;
+	}
 }
 
 template<typename value_type>
 inline std::vector<double> Filter<value_type>::DoFilter(std::vector<value_type> data)
 {
 	std::vector<double> ret_data(data.begin(), data.end());
-
-	for (int i = 0; i < data.size(); i++) {
-		ret_data[i] = 0;
-		for (int j = 0; j < m_order + 1; j++) {
-			if (i >= j) {
-				ret_data[i] = ret_data[i] + m_filter.B[j] * data[i - j];
+	if (m_enable) {
+		for (int i = 0; i < data.size(); i++) {
+			ret_data[i] = 0;
+			for (int j = 0; j < m_order + 1; j++) {
+				if (i >= j) {
+					ret_data[i] = ret_data[i] + m_filter.B[j] * data[i - j];
+				}
 			}
-		}
-		for (int l = 0; l < m_order; l++) {
-			if (i > l) {
-				ret_data[i] = ret_data[i] - m_filter.A[l] * ret_data[i - l - 1];
+			for (int l = 0; l < m_order; l++) {
+				if (i > l) {
+					ret_data[i] = ret_data[i] - m_filter.A[l] * ret_data[i - l - 1];
+				}
 			}
 		}
 	}

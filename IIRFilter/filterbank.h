@@ -10,8 +10,8 @@ public:
 public:
 	//添加滤波器
 	void AddFilter(Filter<double> filter);
-	void AddFilter(int Order, const double* B, const double* A);
-	void AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A);
+	void AddFilter(int Order, const double* B, const double* A, bool enable = false);
+	void AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A, bool enable = false);
 	//滤波
 	double DoFilter(const value_type& data);
 	//定长滤波
@@ -21,7 +21,6 @@ public:
 	unsigned int GetFilterNum();
 	//清空滤波器组
 	void clear();
-private:
 	std::vector<Filter<double>> m_filter_bank;
 };
 
@@ -38,16 +37,16 @@ inline void FilterBank<value_type>::AddFilter(Filter<double> filter)
 }
 
 template<typename value_type>
-inline void FilterBank<value_type>::AddFilter(int Order, const double* B, const double* A)
+inline void FilterBank<value_type>::AddFilter(int Order, const double* B, const double* A, bool enable)
 {
-	Filter<double> tmp_filter(Order, B, A);
+	Filter<double> tmp_filter(Order, B, A, enable);
 	AddFilter(tmp_filter);
 }
 
 template<typename value_type>
-inline void FilterBank<value_type>::AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A)
+inline void FilterBank<value_type>::AddFilter(int Order, const std::vector<double>& B, const std::vector<double>& A, bool enable)
 {
-	Filter<double> tmp_filter(Order, B, A);
+	Filter<double> tmp_filter(Order, B, A, enable);
 	AddFilter(tmp_filter);
 }
 
